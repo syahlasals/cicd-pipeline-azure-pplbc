@@ -42,5 +42,5 @@ jobs:
         run: |
           az containerapp update \
             --name lab6kota305 \
-            --resource-group lab6kota305 \
+            --resource-group lab6305 \
             --image ${{ secrets.REGISTRY_URL }}/lab6kota305:${{ github.sha }}
