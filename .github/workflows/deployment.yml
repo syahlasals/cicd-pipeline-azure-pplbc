@@ -1,0 +1,46 @@
+name: CI/CD Pipeline to Azure
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      # STEP 1: Checkout source code
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      # STEP 2: Login ke Azure
+      - name: Azure Login
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      # STEP 3: Login ke Azure Container Registry
+      - name: Login to ACR
+        run: |
+          docker login ${{ secrets.REGISTRY_URL }} \
+            -u ${{ secrets.ACR_USERNAME }} \
+            -p ${{ secrets.ACR_PASSWORD }}
+
+      # STEP 4: Build Docker Image
+      - name: Build Docker Image
+        run: |
+          docker build -t ${{ secrets.REGISTRY_URL }}/lab6kota305:${{ github.sha }} .
+
+      # STEP 5: Push Docker Image
+      - name: Push Docker Image
+        run: |
+          docker push ${{ secrets.REGISTRY_URL }}/lab6kota305:${{ github.sha }}
+
+      # STEP 6: Update Azure Container App
+      - name: Deploy to Azure Container Apps
+        run: |
+          az containerapp update \
+            --name lab6kota305 \
+            --resource-group lab6kota305 \
+            --image ${{ secrets.REGISTRY_URL }}/lab6kota305:${{ github.sha }}
